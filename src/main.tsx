@@ -10,10 +10,6 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
   </React.StrictMode>
 )
 
-chrome.action.onClicked.addListener(tab => {
-  console.log("clicked")
-})
-
 function webRequest(details: chrome.webRequest.WebRequestBodyDetails) {
   if (details.url.includes("m4s")) {
     // s1q1 -> full quality video
