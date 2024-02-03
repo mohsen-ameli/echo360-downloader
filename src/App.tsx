@@ -30,6 +30,13 @@ export default function App() {
 
   useEffect(() => {
     if (audioUrl && videoUrl && title) {
+      // Could use these cookies to download the video and audio files
+      // then on a server, merge them together, and send the merged file to the user
+      // would need cookies permission in manifest.json as well
+      // console.log("GETTING COOKIES")
+      // chrome.cookies.getAll({ url: "https://echo360.ca" }, cookies => {
+      //   console.log(cookies)
+      // })
       chrome.downloads.download({
         url: videoUrl,
         filename: "video__" + title + ".mp4",
