@@ -11,5 +11,8 @@
   "host_permissions": ["https://*.echo360.ca/*", "http://*.echo360.ca/*"],
   "icons": {
     "32": "favicon.png"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; default-src 'self'"
   }
 }

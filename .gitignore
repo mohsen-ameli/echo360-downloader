@@ -9,6 +9,7 @@ lerna-debug.log*
 
 *.mp4
 venv
+*.wasm
 
 *.zip
 

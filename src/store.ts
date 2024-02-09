@@ -10,6 +10,6 @@ type storeType = {
 export const MainStore = create<storeType>(set => ({
   videoUrl: "",
   audioUrl: "",
-  progress: "",
+  progress: "0",
   title: "",
 }))

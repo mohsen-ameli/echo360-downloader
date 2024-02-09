@@ -1,12 +1,15 @@
 import { useEffect, useState } from "react"
-import "./App.css"
 import { MainStore } from "./store"
+import { useNavigate } from "react-router-dom"
 
 export default function App() {
-  const { audioUrl, progress, videoUrl, title } = MainStore()
+  const { audioUrl, videoUrl, title } = MainStore()
   const [rightPage, setRightPage] = useState(false)
+  const [clicked, setClicked] = useState(false)
+  const nav = useNavigate()
 
   async function download() {
+    setClicked(true)
     const [tab] = await chrome.tabs.query({ active: true })
     chrome.scripting.executeScript({
       target: { tabId: tab.id! },
@@ -20,7 +23,7 @@ export default function App() {
   useEffect(() => {
     async function initExtension() {
       const [tab] = await chrome.tabs.query({ active: true })
-      if (tab.url.includes("echo360.ca")) {
+      if (tab.url.includes("echo360.ca/lesson")) {
         setRightPage(true)
         MainStore.setState({ title: tab.title!.replace(/\W/g, "_") })
       }
@@ -30,13 +33,6 @@ export default function App() {
 
   useEffect(() => {
     if (audioUrl && videoUrl && title) {
-      // Could use these cookies to download the video and audio files
-      // then on a server, merge them together, and send the merged file to the user
-      // would need cookies permission in manifest.json as well
-      // console.log("GETTING COOKIES")
-      // chrome.cookies.getAll({ url: "https://echo360.ca" }, cookies => {
-      //   console.log(cookies)
-      // })
       chrome.downloads.download({
         url: videoUrl,
         filename: "video__" + title + ".mp4",
@@ -45,25 +41,31 @@ export default function App() {
         url: audioUrl,
         filename: "audio__" + title + ".mp4",
       })
+      nav("/merge", { replace: true })
     }
   }, [audioUrl, videoUrl])
 
   if (!rightPage) {
     return (
-      <div>
-        <h1>Wrong page</h1>
-        <p>Go to Echo360 and click the extension</p>
+      <div className="flex flex-col gap-4 p-4 justify-center items-center">
+        <h1 className="text-lg">Wrong page</h1>
+        <p>Go to a specific lesson on Echo360. Then click the extension</p>
       </div>
     )
   }
 
   return (
-    <>
+    <div className="flex flex-col gap-4 p-4 justify-center items-center">
       <h3>
         Click the button below in to download the video and audio files :D
       </h3>
-      <button onClick={download}>Download</button>
-      {progress && <p>{progress}</p>}
-    </>
+      <button
+        className="border-2 py-2 px-4 rounded-lg hover:bg-zinc-600 transition text-center"
+        onClick={download}
+        disabled={clicked}
+      >
+        {!clicked ? "Download" : "Do not close the extension!"}
+      </button>
+    </div>
   )
 }

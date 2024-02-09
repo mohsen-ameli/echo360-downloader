@@ -3,10 +3,25 @@ import ReactDOM from "react-dom/client"
 import App from "./App.tsx"
 import "./index.css"
 import { MainStore } from "./store.ts"
+import MergePage from "./merge.tsx"
+import { createMemoryRouter, RouterProvider } from "react-router-dom"
+
+const router = createMemoryRouter([
+  {
+    path: "/",
+    element: <App />,
+  },
+  {
+    path: "merge",
+    element: <MergePage />,
+  },
+])
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <App />
+    <div className="bg-[#242424] min-w-[320px] font-[3.2rem] h-screen text-white">
+      <RouterProvider router={router} />
+    </div>
   </React.StrictMode>
 )
 
