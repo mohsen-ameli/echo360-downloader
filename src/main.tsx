@@ -5,6 +5,7 @@ import "./index.css"
 import { MainStore } from "./store.ts"
 import MergePage from "./merge.tsx"
 import { createMemoryRouter, RouterProvider } from "react-router-dom"
+import LoadFFmpeg from "./LoadFFmpeg.tsx"
 
 const router = createMemoryRouter([
   {
@@ -19,8 +20,9 @@ const router = createMemoryRouter([
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <div className="bg-[#242424] min-w-[320px] font-[3.2rem] h-screen text-white">
+    <div className="bg-[#242424] min-w-[320px] font-[3.2rem] h-fit text-white">
       <RouterProvider router={router} />
+      <LoadFFmpeg />
     </div>
   </React.StrictMode>
 )
@@ -34,14 +36,7 @@ function webRequest(details: chrome.webRequest.WebRequestBodyDetails) {
     const videoUrl = url.replace(format, "s1q1")
     const audioUrl = url.replace(format, "s0q0")
 
-    console.log("video: ", videoUrl)
-    console.log("audio: ", audioUrl)
-    console.log("inside webrequest")
-    MainStore.setState({
-      audioUrl,
-      videoUrl,
-      progress: "Found video and audio links",
-    })
+    MainStore.setState({ audioUrl, videoUrl })
 
     chrome.webRequest.onBeforeRequest.removeListener(webRequest)
   }
