@@ -23,7 +23,7 @@ export default function App() {
   useEffect(() => {
     async function initExtension() {
       const [tab] = await chrome.tabs?.query({ active: true })
-      if (tab.url.includes("echo360.ca/lesson")) {
+      if (tab.url.includes("echo360")) {
         setRightPage(true)
         MainStore.setState({ title: tab.title!.replace(/\W/g, "_") })
       }
