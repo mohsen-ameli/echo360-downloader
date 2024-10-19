@@ -28,19 +28,19 @@ export const MainStore = create<storeType>((set, get) => ({
     })
 
     let config = {}
-    if (import.meta.env.MODE === "development") {
-      config = {
-        coreURL: await toBlobURL("/ffmpeg-core.js", "text/javascript"),
-        wasmURL: await toBlobURL("/ffmpeg-core.wasm", "application/wasm"),
-        workerURL: await toBlobURL("/ffmpeg-core.worker.js", "text/javascript"),
-      }
-    } else {
-      config = {
-        coreURL: "/ffmpeg-core.js",
-        wasmURL: "/ffmpeg-core.wasm",
-        workerURL: "/ffmpeg-core.worker.js",
-      }
+    // if (import.meta.env.MODE === "development") {
+    //   config = {
+    //     coreURL: await toBlobURL("/ffmpeg-core.js", "text/javascript"),
+    //     wasmURL: await toBlobURL("/ffmpeg-core.wasm", "application/wasm"),
+    //     workerURL: await toBlobURL("/ffmpeg-core.worker.js", "text/javascript"),
+    //   }
+    // } else {
+    config = {
+      coreURL: "/ffmpeg-core.js",
+      wasmURL: "/ffmpeg-core.wasm",
+      workerURL: "/ffmpeg-core.worker.js",
     }
+    // }
     await ffmpeg.load(config)
     set({ ffmpegLoaded: true })
   },
