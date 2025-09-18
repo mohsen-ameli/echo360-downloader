@@ -46,21 +46,49 @@ export default function App() {
     }
   }, [audioUrl, videoUrl])
 
+  const [popupOpened, setPopupOpened] = useState(
+    localStorage.getItem("echo360popup") === null ? false : true
+  )
+
+  useEffect(() => {
+    if (localStorage.getItem("echo360popup")) {
+      nav("/merge", { replace: true })
+    }
+  }, [])
+
+  const handleOpenPopup = async () => {
+    localStorage.setItem("echo360popup", "1")
+    window.open(
+      window.location.origin + "/index.html",
+      "Echo360Popup",
+      "width=400,height=300"
+    )
+    setPopupOpened(true)
+    setInterval(() => {
+      localStorage.removeItem("echo360popup")
+      window.close()
+    }, 100)
+  }
+
   if (!rightPage) {
     return (
       <div className="flex flex-col gap-4 p-4 justify-center items-center">
-        <h1 className="text-xl font-bold">Wrong page</h1>
-        <p>Go to a specific lesson on Echo360. Then click the extension. </p>
+        <h1 className="text-2xl font-bold text-red-400">Wrong page</h1>
+        <h1 className="text-lg">
+          Go to a specific lesson on Echo360. Then click the extension.
+        </h1>
         <p>
-          Click on "Merge Files", if you already have a video and audio file to
+          If you already have a video and audio file to merge, click popup then
           merge.
         </p>
-        <Link
-          className="border-2 py-2 px-4 rounded-lg hover:bg-zinc-600 transition text-center"
-          to="/merge"
-        >
-          Merge Files
-        </Link>
+        {!popupOpened && (
+          <button
+            className="border-2 py-2 px-4 rounded-lg hover:bg-zinc-600 transition text-center"
+            onClick={handleOpenPopup}
+          >
+            Open Popup
+          </button>
+        )}
       </div>
     )
   }

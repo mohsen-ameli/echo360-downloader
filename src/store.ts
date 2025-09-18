@@ -35,11 +35,11 @@ export const MainStore = create<storeType>((set, get) => ({
         workerURL: await toBlobURL("/ffmpeg-core.worker.js", "text/javascript"),
       }
     } else {
-    config = {
-      coreURL: "/ffmpeg-core.js",
-      wasmURL: "/ffmpeg-core.wasm",
-      workerURL: "/ffmpeg-core.worker.js",
-    }
+      config = {
+        coreURL: "/ffmpeg-core.js",
+        wasmURL: "/ffmpeg-core.wasm",
+        workerURL: "/ffmpeg-core.worker.js",
+      }
     }
     await ffmpeg.load(config)
     set({ ffmpegLoaded: true })
