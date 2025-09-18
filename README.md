@@ -6,8 +6,7 @@ https://chromewebstore.google.com/detail/echo360-downloader/ohbjdbfndaclncngjiek
 
 A browser extension to easily download videos/lectures from echo360 website.
 The way it works is the extension downloads the appropriate audio and video files from the current
-page the user is on. Then users will have to give those two files back to the extension to have
-them merged into a final file.
+page the user is on using FFmpeg.
 
 # Developing
 

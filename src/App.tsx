@@ -84,7 +84,7 @@ export default function App() {
   } else if (url) {
     return (
       <div className="flex flex-col gap-4 p-4 justify-center items-center">
-        <h1 className="text-2xl font-bold">Successfully downloaded!</h1>
+        <h1 className="text-2xl font-bold">Successfully Downloaded!</h1>
         <video controls src={url} width="250" />
         <div className="flex gap-4">
           <button
