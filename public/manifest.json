@@ -8,11 +8,11 @@
     "default_title": "Open the popup"
   },
   "permissions": ["scripting", "webRequest", "downloads"],
-  "host_permissions": ["https://*.echo360.ca/*", "http://*.echo360.ca/*"],
+  "host_permissions": ["https://*.echo360.ca/*", "https://*.echo360.com/*"],
   "icons": {
     "32": "favicon.png"
   },
   "content_security_policy": {
-    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; default-src 'self'"
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'; connect-src 'self' https://content.echo360.ca https://content.echo360.com;"
   }
 }

@@ -3,25 +3,12 @@ import ReactDOM from "react-dom/client"
 import App from "./App.tsx"
 import "./index.css"
 import { MainStore } from "./store.ts"
-import MergePage from "./merge.tsx"
-import { createMemoryRouter, RouterProvider } from "react-router-dom"
 import LoadFFmpeg from "./LoadFFmpeg.tsx"
-
-const router = createMemoryRouter([
-  {
-    path: "/",
-    element: <App />,
-  },
-  {
-    path: "merge",
-    element: <MergePage />,
-  },
-])
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <div className="bg-[#242424] w-[400px] font-[3.2rem] h-screen text-white">
-      <RouterProvider router={router} />
+      <App />
       <LoadFFmpeg />
     </div>
   </React.StrictMode>
@@ -50,5 +37,5 @@ function webRequest(details: chrome.webRequest.WebRequestBodyDetails) {
 }
 
 chrome.webRequest.onBeforeRequest.addListener(webRequest, {
-  urls: ["<all_urls>"],
+  urls: ["*://*.echo360.ca/*", "*://*.echo360.com/*"],
 })
