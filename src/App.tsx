@@ -79,7 +79,7 @@ export default function App() {
 
   async function initExtension() {
     const [tab] = await chrome.tabs?.query({ active: true })
-    if (tab.url?.match("https://echo360.*/lesson/*")) {
+    if (tab.url?.match("https://*.echo360.*/lesson/*")) {
       setRightPage(true)
       MainStore.setState({ title: tab.title!.replace(/\W/g, "_") })
     }

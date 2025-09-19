@@ -10,6 +10,7 @@ lerna-debug.log*
 *.mp4
 venv
 *.zip
+release/*
 
 node_modules
 dist

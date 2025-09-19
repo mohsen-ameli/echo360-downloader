@@ -1,12 +1,12 @@
 {
   "name": "echo360-downloader",
   "private": true,
-  "version": "3.0.0",
+  "version": "3.2.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build-zip": "tsc && vite build && zip \"release/release.zip\" dist/**/*",
     "build": "tsc && vite build",
+    "package": "npm run build && cd dist && zip -r ../release/echo360-downloader.zip .",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
   },

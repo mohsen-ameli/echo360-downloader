@@ -7,6 +7,7 @@ https://chromewebstore.google.com/detail/echo360-downloader/ohbjdbfndaclncngjiek
 A browser extension to easily download videos/lectures from echo360 website.
 The way it works is the extension downloads the appropriate audio and video files from the current
 page the user is on using FFmpeg.
+The transcript also gets automatically attached to the downloaded file.
 
 # Developing
 
@@ -19,7 +20,7 @@ After this go to Chrome extensions and click on `load unpacked`, then select `di
 You only have to do this once. For subsequent changes you just run `npm run build`
 and open your extension (no need to reload anything).
 
-For uploading a new version run `npm run build-zip` then upload the generated zip
+For uploading a new version run `npm run package` then upload the generated zip
 inside release folder.
 
 # Notes

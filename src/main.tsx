@@ -39,7 +39,9 @@ function webRequest(details: chrome.webRequest.WebRequestBodyDetails) {
   // Transcript URL
   const xLid = details.url.split("x-lid=")[1].split("&")[0]
   const xMid = details.url.split("x-mid=")[1].split("&")[0]
-  const transcriptUrl = `https://echo360.ca/api/ui/echoplayer/lessons/${xLid}/medias/${xMid}/transcript-file?format=vtt`
+  const host =
+    "echo360" + details.url.split("/0000.")[0].split("echo360").at(-1)
+  const transcriptUrl = `https://${host}/api/ui/echoplayer/lessons/${xLid}/medias/${xMid}/transcript-file?format=vtt`
 
   MainStore.setState({ audioUrl, videoUrl, transcriptUrl })
 
@@ -47,5 +49,11 @@ function webRequest(details: chrome.webRequest.WebRequestBodyDetails) {
 }
 
 chrome.webRequest.onBeforeRequest.addListener(webRequest, {
-  urls: ["*://*.echo360.ca/*", "*://*.echo360.com/*"],
+  urls: [
+    "*://*.echo360.ca/*",
+    "*://*.echo360.com/*",
+    "*://*.echo360.org/*",
+    "*://*.echo360.net.au/*",
+    "*://*.echo360.org.uk/*",
+  ],
 })
