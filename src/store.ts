@@ -5,6 +5,7 @@ import { create } from "zustand"
 type storeType = {
   videoUrl: string
   audioUrl: string
+  transcriptUrl: string
   mergeProgress: number
   title: string
   ffmpeg: FFmpeg
@@ -15,6 +16,7 @@ type storeType = {
 export const MainStore = create<storeType>((set, get) => ({
   videoUrl: "",
   audioUrl: "",
+  transcriptUrl: "",
   mergeProgress: 0,
   title: "",
   ffmpegLoaded: false,

@@ -25,15 +25,25 @@ function webRequest(details: chrome.webRequest.WebRequestBodyDetails) {
   }
 
   // s1q1 -> full quality video
+  const videoUrl = details.url.replace(
+    details.url.split(ext)[0].split("/").at(-1),
+    "s1q1"
+  )
+
   // s0q0 -> audio
-  const url = details.url.toString()
-  const format = url.split(ext)[0].split("/").at(-1)
-  const videoUrl = url.replace(format, "s1q1")
-  const audioUrl = url.replace(format, "s0q0")
+  const audioUrl = details.url.replace(
+    details.url.split(ext)[0].split("/").at(-1),
+    "s0q0"
+  )
 
-  MainStore.setState({ audioUrl, videoUrl })
+  // Transcript URL
+  const xLid = details.url.split("x-lid=")[1].split("&")[0]
+  const xMid = details.url.split("x-mid=")[1].split("&")[0]
+  const transcriptUrl = `https://echo360.ca/api/ui/echoplayer/lessons/${xLid}/medias/${xMid}/transcript-file?format=vtt`
 
-  chrome.webRequest.onBeforeRequest.removeListener(webRequest)
+  MainStore.setState({ audioUrl, videoUrl, transcriptUrl })
+
+  https: chrome.webRequest.onBeforeRequest.removeListener(webRequest)
 }
 
 chrome.webRequest.onBeforeRequest.addListener(webRequest, {

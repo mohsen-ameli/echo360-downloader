@@ -1,7 +1,7 @@
 {
   "name": "Echo360 Downloader",
   "description": "Download lectures from echo360 website for free.",
-  "version": "3.0",
+  "version": "3.1",
   "manifest_version": 3,
   "action": {
     "default_popup": "index.html",
@@ -13,6 +13,6 @@
     "32": "favicon.png"
   },
   "content_security_policy": {
-    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'; connect-src 'self' https://content.echo360.ca https://content.echo360.com;"
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'; connect-src 'self' https://echo360.ca https://echo360.com https://content.echo360.ca https://content.echo360.com;"
   }
 }

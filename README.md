@@ -12,12 +12,15 @@ page the user is on using FFmpeg.
 
 First run `npm i`
 Run `npm run dev` to develop normally but if you want to use the extension
-and check made changes on echo360 website, you must run `npm run build-zip`.
+and check made changes on echo360 website, you must run `npm run build`.
 This will build a `dist` folder in the root of the project.
 After this go to Chrome extensions and click on `load unpacked`, then select `dist`.
 
-You only have to do this once. For subsequent changes you just run `npm run build-zip`
+You only have to do this once. For subsequent changes you just run `npm run build`
 and open your extension (no need to reload anything).
+
+For uploading a new version run `npm run build-zip` then upload the generated zip
+inside release folder.
 
 # Notes
 
