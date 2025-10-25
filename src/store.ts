@@ -3,9 +3,11 @@ import { toBlobURL } from "@ffmpeg/util"
 import { create } from "zustand"
 
 type storeType = {
-  videoUrl: string
-  audioUrl: string
-  transcriptUrl: string
+  videoUrl: string | null
+  videoUrlSecondary: string | null
+  audioUrl: string | null
+  transcriptUrl: string | null
+  mergeOperation: "Downloading" | "Merging"
   mergeProgress: number
   title: string
   ffmpeg: FFmpeg
@@ -14,9 +16,11 @@ type storeType = {
 }
 
 export const MainStore = create<storeType>((set, get) => ({
-  videoUrl: "",
-  audioUrl: "",
-  transcriptUrl: "",
+  videoUrl: null,
+  videoUrlSecondary: null,
+  audioUrl: null,
+  transcriptUrl: null,
+  mergeOperation: "Downloading",
   mergeProgress: 0,
   title: "",
   ffmpegLoaded: false,
@@ -26,7 +30,10 @@ export const MainStore = create<storeType>((set, get) => ({
 
     // This is the progress for when ffmpeg is doing stuff (not including loading)
     ffmpeg.on("progress", ({ progress }) => {
-      set(s => ({ mergeProgress: Number((progress * 100).toFixed(0)) }))
+      set({
+        mergeProgress: Math.round(progress * 100),
+        mergeOperation: "Merging",
+      })
     })
 
     let config = {}
