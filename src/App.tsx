@@ -44,19 +44,30 @@ export default function App() {
 
   // Download and merge audio and video files using ffmpeg.wasm
   async function downloadFiles() {
-    // Fetching files. ffmpeg doesn't provide progress for fetchFile so we do it manually
-    MainStore.setState({ mergeProgress: 0, mergeOperation: "Downloading" })
-    const videoFile = await fetchFile(videoUrl)
-    MainStore.setState({ mergeProgress: 25 })
-    const audioFile = await fetchFile(audioUrl)
-    const transcriptFile = await fetchFile(transcriptUrl)
-    let videoSecondaryFile: Uint8Array | null = null
-    MainStore.setState({ mergeProgress: 50 })
-    if (videoUrlSecondary) {
-      videoSecondaryFile = await fetchFile(videoUrlSecondary)
+    let videoFile: Uint8Array = null
+    let audioFile: Uint8Array = null
+    let transcriptFile: Uint8Array = null
+    let videoSecondaryFile: Uint8Array = null
+    try {
+      // Fetching files. ffmpeg doesn't provide progress for fetchFile so we do it manually
+      MainStore.setState({ mergeProgress: 0, mergeOperation: "Downloading" })
+      videoFile = await fetchFile(videoUrl)
+      MainStore.setState({ mergeProgress: 25 })
+      audioFile = await fetchFile(audioUrl)
+      transcriptFile = await fetchFile(transcriptUrl)
+      MainStore.setState({ mergeProgress: 50 })
+      if (videoUrlSecondary) {
+        videoSecondaryFile = await fetchFile(videoUrlSecondary)
+        MainStore.setState({ mergeProgress: 100 })
+      }
       MainStore.setState({ mergeProgress: 100 })
+    } catch (e) {
+      setError(
+        "Failed to download files. Try again or kindly contact the developer."
+      )
+      setClicked(false)
+      return
     }
-    MainStore.setState({ mergeProgress: 100 })
 
     const video = await ffmpeg.writeFile("video.mp4", videoFile)
     const audio = await ffmpeg.writeFile("audio.mp4", audioFile)
@@ -71,53 +82,61 @@ export default function App() {
     }
 
     let code: number
-    if (videoUrlSecondary) {
-      await ffmpeg.writeFile("videoSecondary.mp4", videoSecondaryFile)
-      // ffmpeg -i video.mp4 -i videoSecondary.mp4 -i audio.mp4 -i transcript.vtt -map 0 -map 1 -map 2 -map 3 -c copy -c:s mov_text -disposition:0 default -disposition:1 0 output.mp4
-      code = await ffmpeg.exec([
-        "-i",
-        "video.mp4",
-        "-i",
-        "videoSecondary.mp4",
-        "-i",
-        "audio.mp4",
-        "-i",
-        "transcript.vtt",
-        "-map",
-        "0",
-        "-map",
-        "1",
-        "-map",
-        "2",
-        "-map",
-        "3",
-        "-c",
-        "copy",
-        "-c:s",
-        "mov_text",
-        "-disposition:0",
-        "default",
-        "-disposition:1",
-        "0",
-        "output.mp4",
-      ])
-    } else {
-      // ffmpeg -i video.mp4 -i audio.mp4 -i transcript.vtt -c copy -c:s mov_text -disposition:s:0 default output.mp4
-      code = await ffmpeg.exec([
-        "-i",
-        "video.mp4",
-        "-i",
-        "audio.mp4",
-        "-i",
-        "transcript.vtt",
-        "-c",
-        "copy",
-        "-c:s",
-        "mov_text",
-        "-disposition:s:0",
-        "default",
-        "output.mp4",
-      ])
+    try {
+      if (videoUrlSecondary) {
+        await ffmpeg.writeFile("videoSecondary.mp4", videoSecondaryFile)
+        // ffmpeg -i video.mp4 -i videoSecondary.mp4 -i audio.mp4 -i transcript.vtt -map 0 -map 1 -map 2 -map 3 -c copy -c:s mov_text -disposition:0 default -disposition:1 0 output.mp4
+        code = await ffmpeg.exec([
+          "-i",
+          "video.mp4",
+          "-i",
+          "videoSecondary.mp4",
+          "-i",
+          "audio.mp4",
+          "-i",
+          "transcript.vtt",
+          "-map",
+          "0",
+          "-map",
+          "1",
+          "-map",
+          "2",
+          "-map",
+          "3",
+          "-c",
+          "copy",
+          "-c:s",
+          "mov_text",
+          "-disposition:0",
+          "default",
+          "-disposition:1",
+          "0",
+          "output.mp4",
+        ])
+      } else {
+        // ffmpeg -i video.mp4 -i audio.mp4 -i transcript.vtt -c copy -c:s mov_text -disposition:s:0 default output.mp4
+        code = await ffmpeg.exec([
+          "-i",
+          "video.mp4",
+          "-i",
+          "audio.mp4",
+          "-i",
+          "transcript.vtt",
+          "-c",
+          "copy",
+          "-c:s",
+          "mov_text",
+          "-disposition:s:0",
+          "default",
+          "output.mp4",
+        ])
+      }
+    } catch (e) {
+      setError(
+        "Failed to merge files. Try again or kindly contact the developer."
+      )
+      setClicked(false)
+      return
     }
 
     if (code !== 0) {
@@ -200,7 +219,7 @@ export default function App() {
 
   return (
     <div className="flex flex-col gap-4 p-4 justify-center items-center relative">
-      {(clicked || mergeProgress > 0) && (
+      {!error && (clicked || mergeProgress > 0) && (
         <div className="absolute w-full h-full bg-[#242424e8] text-lg left-0 top-0 flex flex-col items-center justify-center">
           <h1 className="text-xl text-red-400">Do not close the extension!</h1>
           <h1 className="text-sm">

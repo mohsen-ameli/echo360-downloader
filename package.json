@@ -1,7 +1,7 @@
 {
   "name": "echo360-downloader",
   "private": true,
-  "version": "4.0",
+  "version": "4.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -13,7 +13,7 @@
   "dependencies": {
     "@ffmpeg/ffmpeg": "^0.12.10",
     "@ffmpeg/util": "^0.12.1",
-    "axios": "^1.12.2",
+    "axios": "^1.13.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "zustand": "^4.5.0"
