@@ -2,7 +2,7 @@ import React from "react"
 import ReactDOM from "react-dom/client"
 import App from "./App.tsx"
 import "./index.css"
-import { MainStore } from "./store.ts"
+import { UrlStore } from "./store.ts"
 import LoadFFmpeg from "./LoadFFmpeg.tsx"
 import axios from "axios"
 
@@ -30,16 +30,16 @@ async function getSize(url: string) {
 }
 
 export function webRequest(details: chrome.webRequest.WebRequestBodyDetails) {
-  const { audioUrl, videoUrl, transcriptUrl } = MainStore.getState()
+  const { audioUrl, videoUrl, transcriptUrl } = UrlStore.getState()
   if (audioUrl && videoUrl && transcriptUrl) {
     chrome.webRequest.onBeforeRequest.removeListener(webRequest)
   }
 
   // Downloading transcript file
   if (details.url.includes("vtt")) {
-    MainStore.setState({ transcriptUrl: details.url })
+    UrlStore.setState({ transcriptUrl: details.url })
   } else if (details.url.includes("transcript") && !transcriptUrl) {
-    MainStore.setState({ transcriptUrl: details.url + "-file?format=vtt" })
+    UrlStore.setState({ transcriptUrl: details.url + "-file?format=vtt" })
   }
 
   // Needed to filter out other non-useful media
@@ -61,7 +61,7 @@ export function webRequest(details: chrome.webRequest.WebRequestBodyDetails) {
     const s2q0 = details.url.replace("s0q0", "s2q0")
     const s2q1 = details.url.replace("s0q0", "s2q1")
 
-    MainStore.setState({ audioUrl: s0q0 })
+    UrlStore.setState({ audioUrl: s0q0 })
 
     getSize(s2q1).then(s2q1size => {
       if (s2q1size == null) {
@@ -70,10 +70,10 @@ export function webRequest(details: chrome.webRequest.WebRequestBodyDetails) {
           if (s1q1size > 1.9) {
             // HD quality is too large. ffmpeg memory buffer limit is 2GB
             // Downloading SD
-            MainStore.setState({ videoUrl: s1q0 })
+            UrlStore.setState({ videoUrl: s1q0, videoUrlSecondary: null })
           } else {
             // Downloading HD
-            MainStore.setState({ videoUrl: s1q1 })
+            UrlStore.setState({ videoUrl: s1q1, videoUrlSecondary: null })
           }
         })
       } else {
@@ -84,17 +84,17 @@ export function webRequest(details: chrome.webRequest.WebRequestBodyDetails) {
             // Downloading SD
             if (s2q1size > 1) {
               // Secondary HD too large
-              MainStore.setState({ videoUrl: s1q0, videoUrlSecondary: s2q0 })
+              UrlStore.setState({ videoUrl: s1q0, videoUrlSecondary: s2q0 })
             } else {
-              MainStore.setState({ videoUrl: s1q0, videoUrlSecondary: s2q1 })
+              UrlStore.setState({ videoUrl: s1q0, videoUrlSecondary: s2q1 })
             }
           } else {
             // Downloading HD
             if (s2q1size > 1) {
               // Secondary video HD too large
-              MainStore.setState({ videoUrl: s1q1, videoUrlSecondary: s2q0 })
+              UrlStore.setState({ videoUrl: s1q1, videoUrlSecondary: s2q0 })
             } else {
-              MainStore.setState({ videoUrl: s1q1, videoUrlSecondary: s2q1 })
+              UrlStore.setState({ videoUrl: s1q1, videoUrlSecondary: s2q1 })
             }
           }
         })

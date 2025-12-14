@@ -1,28 +1,43 @@
 import { FFmpeg } from "@ffmpeg/ffmpeg"
 import { toBlobURL } from "@ffmpeg/util"
 import { create } from "zustand"
+import { createJSONStorage, persist } from "zustand/middleware"
 
 type storeType = {
-  videoUrl: string | null
-  videoUrlSecondary: string | null
-  audioUrl: string | null
-  transcriptUrl: string | null
   mergeOperation: "Downloading" | "Merging"
   mergeProgress: number
-  title: string
   ffmpeg: FFmpeg
   ffmpegLoaded: boolean
   load: () => void
 }
 
+type UrlStore = {
+  videoUrl: string | null
+  videoUrlSecondary: string | null
+  audioUrl: string | null
+  transcriptUrl: string | null
+  title: string | null
+}
+
+export const UrlStore = create<UrlStore>()(
+  persist(
+    (set, get) => ({
+      videoUrl: null,
+      videoUrlSecondary: null,
+      audioUrl: null,
+      transcriptUrl: null,
+      title: null,
+    }),
+    {
+      name: "url-storage",
+      storage: createJSONStorage(() => localStorage),
+    }
+  )
+)
+
 export const MainStore = create<storeType>((set, get) => ({
-  videoUrl: null,
-  videoUrlSecondary: null,
-  audioUrl: null,
-  transcriptUrl: null,
   mergeOperation: "Downloading",
   mergeProgress: 0,
-  title: "",
   ffmpegLoaded: false,
   ffmpeg: new FFmpeg(),
   load: async () => {
