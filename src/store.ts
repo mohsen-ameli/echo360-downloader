@@ -17,6 +17,7 @@ type UrlStore = {
   audioUrl: string | null
   transcriptUrl: string | null
   title: string | null
+  url: string | null
 }
 
 export const UrlStore = create<UrlStore>()(
@@ -27,6 +28,7 @@ export const UrlStore = create<UrlStore>()(
       audioUrl: null,
       transcriptUrl: null,
       title: null,
+      url: null,
     }),
     {
       name: "url-storage",

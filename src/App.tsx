@@ -260,6 +260,17 @@ export default function App() {
     a.click()
   }
 
+  function getDate() {
+    const now = new Date()
+    const year = now.getFullYear()
+    const month = String(now.getMonth() + 1).padStart(2, "0")
+    const day = String(now.getDate()).padStart(2, "0")
+    const hours = String(now.getHours()).padStart(2, "0")
+    const minutes = String(now.getMinutes()).padStart(2, "0")
+    const seconds = String(now.getSeconds()).padStart(2, "0")
+    return `${year}-${month}-${day}_${hours}:${minutes}:${seconds}`
+  }
+
   // Initializing extension
   useEffect(() => {
     async function initExtension() {
@@ -267,8 +278,8 @@ export default function App() {
       if (tab.url?.match("https://*.echo360.*/")) {
         setRightPage(true)
         const title = tab.title!.replace(/\W/g, "_")
-        setNameOfFile(tab.title!)
-        if (title === UrlStore.getState().title) {
+        setNameOfFile(tab.title! + "_" + getDate())
+        if (tab.url === UrlStore.getState().url) {
           return
         }
         UrlStore.setState({
@@ -277,6 +288,7 @@ export default function App() {
           audioUrl: null,
           transcriptUrl: null,
           title,
+          url: tab.url,
         })
         reloadAndGetURLs()
       }
