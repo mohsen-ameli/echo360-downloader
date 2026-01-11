@@ -277,8 +277,8 @@ export default function App() {
       const [tab] = await chrome.tabs?.query({ active: true })
       if (tab.url?.match("https://*.echo360.*/")) {
         setRightPage(true)
-        const title = tab.title!.replace(/\W/g, "_")
-        setNameOfFile(tab.title! + "_" + getDate())
+        const title = tab.title!.replace(/\W/g, "_") + "_" + getDate()
+        setNameOfFile(title)
         if (tab.url === UrlStore.getState().url) {
           return
         }
@@ -321,7 +321,7 @@ export default function App() {
         </div>
       )}
       <h1 className="text-2xl font-bold">Echo360 Downloader</h1>
-      <h2 className="text-lg">{nameOfFile}</h2>
+      <h2 className="text-lg break-all">{nameOfFile}</h2>
       {error && <h2 className="text-red-500">{error}</h2>}
       {!videoUrl || !audioUrl || !transcriptUrl ? (
         <div className="absolute w-full h-full bg-[#242424e8] text-lg left-0 top-0 flex flex-col items-center justify-center">
