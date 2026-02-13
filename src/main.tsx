@@ -43,25 +43,37 @@ export function webRequest(details: chrome.webRequest.WebRequestBodyDetails) {
   }
 
   // Needed to filter out other non-useful media
-  if (!details.url.includes(".m4s") && !details.url.includes(".mp4")) {
+  if (!details.url.includes(".m3u8")) {
     return
   }
 
-  if (details.url.includes("s0q0")) {
+  if (details.url.includes("s0q")) {
     // These are the file names for different streams of audio/video
-    // s0q0 -> audio
+    // s0q0 -> audio stream with SD quality
+    // s0q1 -> audio stream with HD quality (if available)
     // s1q0 -> First video with SD quality
     // s1q1 -> First video with HD quality
     // s2q0 -> Secondary video (if available) with SD quality
     // s2q1 -> Secondary video (if available) with HD quality
 
-    const s0q0 = details.url
-    const s1q0 = details.url.replace("s0q0", "s1q0")
-    const s1q1 = details.url.replace("s0q0", "s1q1")
-    const s2q0 = details.url.replace("s0q0", "s2q0")
-    const s2q1 = details.url.replace("s0q0", "s2q1")
+    const url = details.url.replace("m3u8", "mp4")
 
-    UrlStore.setState({ audioUrl: s0q0 })
+    const s0q0 = url
+    const s0q1 = url.replace("s0q0", "s0q1")
+    const s1q0 = url.replace("s0q0", "s1q0")
+    const s1q1 = url.replace("s0q0", "s1q1")
+    const s2q0 = url.replace("s0q0", "s2q0")
+    const s2q1 = url.replace("s0q0", "s2q1")
+
+    getSize(s0q1).then(s0q1size => {
+      if (s0q1size == null) {
+        // HD audio not available, downloading SD
+        UrlStore.setState({ audioUrl: s0q0 })
+      } else {
+        // Downloading HD audio
+        UrlStore.setState({ audioUrl: s0q1 })
+      }
+    })
 
     getSize(s2q1).then(s2q1size => {
       if (s2q1size == null) {
