@@ -3,12 +3,10 @@ import { MainStore, UrlStore } from "./store"
 import { fetchFile } from "@ffmpeg/util"
 
 export default function App() {
-  const { audioUrl, videoUrl, videoUrlSecondary, transcriptUrl, title } =
-    UrlStore()
+  const { audioUrl, videoUrl, videoUrlSecondary, transcriptUrl, title } = UrlStore()
   const [rightPage, setRightPage] = useState(false)
   const [clicked, setClicked] = useState(false)
   const ffmpeg = MainStore(s => s.ffmpeg)
-  const [url, setUrl] = useState<string>(null)
   const [nameOfFile, setNameOfFile] = useState<string>(null)
   const mergeProgress = MainStore(s => s.mergeProgress)
   const mergeOperation = MainStore(s => s.mergeOperation)
@@ -66,9 +64,7 @@ export default function App() {
       }
       MainStore.setState({ mergeProgress: 100 })
     } catch (e) {
-      setError(
-        "Failed to download files. Try again or kindly contact the developer."
-      )
+      setError("Failed to download files. Try again or kindly contact the developer. Error#0")
       setClicked(false)
       return
     }
@@ -78,9 +74,7 @@ export default function App() {
     const transcript = await ffmpeg.writeFile("transcript.vtt", transcriptFile)
 
     if (!video || !audio || !transcript) {
-      setError(
-        "Failed to download files. Try again or kindly contact the developer."
-      )
+      setError("Failed to download files. Try again or kindly contact the developer. Error#1")
       setClicked(false)
       return
     }
@@ -136,27 +130,20 @@ export default function App() {
         ])
       }
     } catch (e) {
-      setError(
-        "Failed to merge files. Try again or kindly contact the developer."
-      )
+      setError("Failed to merge files. Try again or kindly contact the developer. Error#2")
       setClicked(false)
       return
     }
 
     if (code !== 0) {
-      setError(
-        "Failed to merge files. Try again or kindly contact the developer."
-      )
+      setError("Failed to merge files. Try again or kindly contact the developer. Error#3")
       setClicked(false)
       return
     }
 
     const fileData = await ffmpeg.readFile("output.mp4")
     const data = new Uint8Array(fileData as unknown as ArrayBuffer)
-    const mergedUrl = URL.createObjectURL(
-      new Blob([data.buffer], { type: "video/mp4" })
-    )
-    setUrl(mergedUrl)
+    const mergedUrl = URL.createObjectURL(new Blob([data.buffer], { type: "video/mp4" }))
     setClicked(false)
     setError(null)
     MainStore.setState({ mergeProgress: 0 })
@@ -189,9 +176,7 @@ export default function App() {
       transcriptFile = await fetchFile(transcriptUrl)
       MainStore.setState({ mergeProgress: 100 })
     } catch (e) {
-      setError(
-        "Failed to download files. Try again or kindly contact the developer."
-      )
+      setError("Failed to download files. Try again or kindly contact the developer. Error#4")
       setClicked(false)
       return
     }
@@ -201,9 +186,7 @@ export default function App() {
     const transcript = await ffmpeg.writeFile("transcript.vtt", transcriptFile)
 
     if (!video || !audio || !transcript) {
-      setError(
-        "Failed to download files. Try again or kindly contact the developer."
-      )
+      setError("Failed to download files. Try again or kindly contact the developer. Error#5")
       setClicked(false)
       return
     }
@@ -227,27 +210,20 @@ export default function App() {
         "output.mp4",
       ])
     } catch (e) {
-      setError(
-        "Failed to merge files. Try again or kindly contact the developer."
-      )
+      setError("Failed to merge files. Try again or kindly contact the developer. Error#6")
       setClicked(false)
       return
     }
 
     if (code !== 0) {
-      setError(
-        "Failed to merge files. Try again or kindly contact the developer."
-      )
+      setError("Failed to merge files. Try again or kindly contact the developer. Error#7")
       setClicked(false)
       return
     }
 
     const fileData = await ffmpeg.readFile("output.mp4")
     const data = new Uint8Array(fileData as unknown as ArrayBuffer)
-    const mergedUrl = URL.createObjectURL(
-      new Blob([data.buffer], { type: "video/mp4" })
-    )
-    setUrl(mergedUrl)
+    const mergedUrl = URL.createObjectURL(new Blob([data.buffer], { type: "video/mp4" }))
     setClicked(false)
     setError(null)
     MainStore.setState({ mergeProgress: 0 })
@@ -274,12 +250,16 @@ export default function App() {
   // Initializing extension
   useEffect(() => {
     async function initExtension() {
+      console.log("Initializing extension...")
       const [tab] = await chrome.tabs?.query({ active: true })
+      console.log("Current tab URL:", tab.url)
       if (tab.url?.match("https://*.echo360.*/")) {
+        console.log("On the right page. Initializing content script...")
         setRightPage(true)
         const title = tab.title!.replace(/\W/g, "_") + "_" + getDate()
         setNameOfFile(title)
-        if (tab.url === UrlStore.getState().url) {
+        const { url, audioUrl } = UrlStore.getState()
+        if (tab.url === url && audioUrl) {
           return
         }
         UrlStore.setState({
@@ -291,6 +271,8 @@ export default function App() {
           url: tab.url,
         })
         reloadAndGetURLs()
+      } else {
+        console.log("Not on the right page.")
       }
     }
     initExtension()
@@ -303,9 +285,7 @@ export default function App() {
     return (
       <div className="flex flex-col gap-4 p-4 justify-center items-center">
         <h1 className="text-2xl font-bold text-red-400">Wrong page</h1>
-        <h1 className="text-lg">
-          Go to a specific video on Echo360. Then click on the extension.
-        </h1>
+        <h1 className="text-lg">Go to a specific video on Echo360. Then click on the extension.</h1>
       </div>
     )
   }
@@ -352,11 +332,7 @@ export default function App() {
             onClick={downloadAllInOne}
             disabled={clicked}
           >
-            {!clicked
-              ? videoUrlSecondary
-                ? "Download All In One"
-                : "Download"
-              : "Downloading..."}
+            {!clicked ? (videoUrlSecondary ? "Download All In One" : "Download") : "Downloading..."}
           </button>
         </div>
       )}
@@ -376,13 +352,12 @@ export default function App() {
             Select subtitles (closed captions) from the <b>Subtitles</b> menu.
           </li>
           <li>
-            Switch between video streams (if available) from the <b>Video</b>{" "}
-            menu.
+            Switch between video streams (if available) from the <b>Video</b> menu.
           </li>
         </ul>
         <span>
-          All available subtitles and video streams are embedded in your
-          downloaded file for easy access.
+          All available subtitles and video streams are embedded in your downloaded file for easy
+          access.
         </span>
       </p>
     </div>

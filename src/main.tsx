@@ -60,13 +60,13 @@ export function webRequest(details: chrome.webRequest.WebRequestBodyDetails) {
     const s2q0 = details.url.replace(media[0], "s2q0.mp4")
     const s2q1 = details.url.replace(media[0], "s2q1.mp4")
 
-    getSize(s0q1).then(s0q1size => {
-      if (s0q1size == null) {
-        // HD audio not available, downloading SD
-        UrlStore.setState({ audioUrl: s0q0 })
-      } else {
-        // Downloading HD audio
+    getSize(s0q0).then(s0q0size => {
+      if (s0q0size == null) {
+        // SD audio not available, downloading HD
         UrlStore.setState({ audioUrl: s0q1 })
+      } else {
+        // Downloading SD audio
+        UrlStore.setState({ audioUrl: s0q0 })
       }
     })
 
