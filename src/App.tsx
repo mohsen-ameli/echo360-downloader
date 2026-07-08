@@ -7,15 +7,18 @@ export default function App() {
   const [rightPage, setRightPage] = useState(false)
   const [clicked, setClicked] = useState(false)
   const ffmpeg = MainStore(s => s.ffmpeg)
-  const [nameOfFile, setNameOfFile] = useState<string>(null)
+  const [nameOfFile, setNameOfFile] = useState("")
   const mergeProgress = MainStore(s => s.mergeProgress)
   const mergeOperation = MainStore(s => s.mergeOperation)
-  const [error, setError] = useState<string>(null)
+  const [error, setError] = useState<string | null>(null)
 
   // Reload the page to trigger content script (in main.tsx)
   // This will retrieve the audioUrl, videoUrl and other urls that are set
   async function reloadAndGetURLs() {
-    const [tab] = await chrome.tabs?.query({ active: true })
+    const [tab] = await chrome.tabs?.query({
+      active: true,
+      currentWindow: true,
+    })
     chrome.scripting
       .executeScript({
         target: { tabId: tab.id! },
@@ -46,12 +49,13 @@ export default function App() {
     }
 
     setClicked(true)
-    let videoFile: Uint8Array = null
-    let audioFile: Uint8Array = null
-    let transcriptFile: Uint8Array = null
-    let videoSecondaryFile: Uint8Array = null
+    let videoFile: Uint8Array
+    let audioFile: Uint8Array
+    let transcriptFile: Uint8Array
+    let videoSecondaryFile: Uint8Array
+
+    // Fetching files. ffmpeg doesn't provide progress for fetchFile so we do it manually
     try {
-      // Fetching files. ffmpeg doesn't provide progress for fetchFile so we do it manually
       MainStore.setState({ mergeProgress: 0, mergeOperation: "Downloading" })
       videoFile = await fetchFile(videoUrl)
       MainStore.setState({ mergeProgress: 25 })
@@ -61,6 +65,8 @@ export default function App() {
       if (videoUrlSecondary) {
         videoSecondaryFile = await fetchFile(videoUrlSecondary)
         MainStore.setState({ mergeProgress: 100 })
+      } else {
+        videoSecondaryFile = new Uint8Array()
       }
       MainStore.setState({ mergeProgress: 100 })
     } catch (e) {
@@ -163,9 +169,9 @@ export default function App() {
     }
 
     setClicked(true)
-    let videoFile: Uint8Array = null
-    let audioFile: Uint8Array = null
-    let transcriptFile: Uint8Array = null
+    let videoFile: Uint8Array
+    let audioFile: Uint8Array
+    let transcriptFile: Uint8Array
     try {
       // Fetching files. ffmpeg doesn't provide progress for fetchFile so we do it manually
       MainStore.setState({ mergeProgress: 0, mergeOperation: "Downloading" })
@@ -251,10 +257,11 @@ export default function App() {
   useEffect(() => {
     async function initExtension() {
       console.log("Initializing extension...")
-      const [tab] = await chrome.tabs?.query({ active: true })
-      console.log("Current tab URL:", tab.url)
+      const [tab] = await chrome.tabs?.query({
+        active: true,
+        currentWindow: true,
+      })
       if (tab.url?.match("https://*.echo360.*/")) {
-        console.log("On the right page. Initializing content script...")
         setRightPage(true)
         const title = tab.title!.replace(/\W/g, "_") + "_" + getDate()
         setNameOfFile(title)
@@ -360,6 +367,15 @@ export default function App() {
           access.
         </span>
       </p>
+
+      <a
+        href="https://www.buymeacoffee.com/mohsenameli"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="underline text-blue-400 text-xs text-start"
+      >
+        Buy me a coffee
+      </a>
     </div>
   )
 }

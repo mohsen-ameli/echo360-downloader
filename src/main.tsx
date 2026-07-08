@@ -29,14 +29,24 @@ async function getSize(url: string) {
   }
 }
 
+let transcriptChecks = [false, false] // [vtt, transcript]
+
 async function populateUrls(url: string) {
   const { transcriptUrl } = UrlStore.getState()
 
   // Downloading transcript file
-  if (url.includes("vtt")) {
-    UrlStore.setState({ transcriptUrl: url })
-  } else if (url.includes("transcript") && !transcriptUrl) {
-    UrlStore.setState({ transcriptUrl: url + "-file?format=vtt" })
+  if (url.includes("vtt") && !transcriptUrl && !transcriptChecks[0]) {
+    transcriptChecks[0] = true
+    const size = await getSize(url)
+    if (size) {
+      UrlStore.setState({ transcriptUrl: url })
+    }
+  } else if (url.includes("transcript") && !transcriptUrl && !transcriptChecks[1]) {
+    transcriptChecks[1] = true
+    const size = await getSize(url)
+    if (size) {
+      UrlStore.setState({ transcriptUrl: url + "-file?format=vtt" })
+    }
   }
 
   const media = url.match("s\.q\..m3u8")
@@ -79,7 +89,7 @@ async function populateUrls(url: string) {
   if (s2q1size == null) {
     const s1q1size = await getSize(s1q1)
     // No secondary video available
-    if (s1q1size > 1.9) {
+    if (s1q1size && s1q1size > 1.9) {
       // HD quality is too large. ffmpeg memory buffer limit is 2GB
       // Downloading SD
       UrlStore.setState({ videoUrl: s1q0, videoUrlSecondary: null })
@@ -90,7 +100,7 @@ async function populateUrls(url: string) {
   } else {
     const s1q1size = await getSize(s1q1)
     // Secondary video is available
-    if (s1q1size > 1) {
+    if (s1q1size && s1q1size > 1) {
       // HD quality is too large. ffmpeg memory buffer limit is 2GB
       // Downloading SD
       if (s2q1size > 1) {
