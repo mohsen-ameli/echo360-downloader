@@ -8,7 +8,7 @@ type storeType = {
   mergeProgress: number
   ffmpeg: FFmpeg
   ffmpegLoaded: boolean
-  load: () => void
+  load: () => Promise<void>
 }
 
 type UrlStore = {
@@ -18,6 +18,7 @@ type UrlStore = {
   transcriptUrl: string | null
   title: string | null
   url: string | null
+  loading: boolean
 }
 
 export const UrlStore = create<UrlStore>()(
@@ -29,6 +30,7 @@ export const UrlStore = create<UrlStore>()(
       transcriptUrl: null,
       title: null,
       url: null,
+      loading: false,
     }),
     {
       name: "url-storage",

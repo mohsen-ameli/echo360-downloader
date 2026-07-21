@@ -1,7 +1,7 @@
 {
   "name": "Echo360 Downloader",
-  "description": "Download lectures from echo360 website for free.",
-  "version": "4.4.0",
+  "description": "Download lectures from echo360 website.",
+  "version": "4.5.0",
   "manifest_version": 3,
   "action": {
     "default_popup": "index.html",

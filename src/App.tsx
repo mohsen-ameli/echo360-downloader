@@ -3,7 +3,7 @@ import { MainStore, UrlStore } from "./store"
 import { fetchFile } from "@ffmpeg/util"
 
 export default function App() {
-  const { audioUrl, videoUrl, videoUrlSecondary, transcriptUrl, title } = UrlStore()
+  const { audioUrl, videoUrl, videoUrlSecondary, transcriptUrl, title, loading } = UrlStore()
   const [rightPage, setRightPage] = useState(false)
   const [clicked, setClicked] = useState(false)
   const ffmpeg = MainStore(s => s.ffmpeg)
@@ -15,6 +15,7 @@ export default function App() {
   // Reload the page to trigger content script (in main.tsx)
   // This will retrieve the audioUrl, videoUrl and other urls that are set
   async function reloadAndGetURLs() {
+    UrlStore.setState({ loading: true })
     const [tab] = await chrome.tabs?.query({
       active: true,
       currentWindow: true,
@@ -42,16 +43,58 @@ export default function App() {
       })
   }
 
+  function buildMergeArgs({
+    hasSecondaryVideo,
+    hasAudio,
+    hasTranscript,
+  }: {
+    hasSecondaryVideo: boolean
+    hasAudio: boolean
+    hasTranscript: boolean
+  }) {
+    const args = ["-y", "-i", "video.mp4"]
+
+    if (hasSecondaryVideo) {
+      args.push("-i", "videoSecondary.mp4")
+    }
+    if (hasAudio) {
+      args.push("-i", "audio.mp4")
+    }
+    if (hasTranscript) {
+      args.push("-i", "transcript.vtt")
+    }
+
+    args.push("-map", "0")
+    if (hasSecondaryVideo) {
+      args.push("-map", "1")
+    }
+    if (hasAudio) {
+      args.push("-map", String(hasSecondaryVideo ? 2 : 1))
+    }
+    if (hasTranscript) {
+      const transcriptInputIndex = hasSecondaryVideo ? (hasAudio ? 3 : 2) : hasAudio ? 2 : 1
+      args.push("-map", String(transcriptInputIndex))
+    }
+
+    args.push("-c", "copy")
+    if (hasTranscript) {
+      args.push("-c:s", "mov_text", "-disposition:s:0", "default")
+    }
+    args.push("output.mp4")
+
+    return args
+  }
+
   // Download and merge audio and video files using ffmpeg.wasm
   async function downloadAllInOne() {
-    if (!audioUrl || !videoUrl || !transcriptUrl) {
+    if (!videoUrl) {
       return
     }
 
     setClicked(true)
     let videoFile: Uint8Array
-    let audioFile: Uint8Array
-    let transcriptFile: Uint8Array
+    let audioFile: Uint8Array | null = null
+    let transcriptFile: Uint8Array | null = null
     let videoSecondaryFile: Uint8Array
 
     // Fetching files. ffmpeg doesn't provide progress for fetchFile so we do it manually
@@ -59,8 +102,20 @@ export default function App() {
       MainStore.setState({ mergeProgress: 0, mergeOperation: "Downloading" })
       videoFile = await fetchFile(videoUrl)
       MainStore.setState({ mergeProgress: 25 })
-      audioFile = await fetchFile(audioUrl)
-      transcriptFile = await fetchFile(transcriptUrl)
+      if (audioUrl) {
+        try {
+          audioFile = await fetchFile(audioUrl)
+        } catch {
+          audioFile = null
+        }
+      }
+      if (transcriptUrl) {
+        try {
+          transcriptFile = await fetchFile(transcriptUrl)
+        } catch {
+          transcriptFile = null
+        }
+      }
       MainStore.setState({ mergeProgress: 50 })
       if (videoUrlSecondary) {
         videoSecondaryFile = await fetchFile(videoUrlSecondary)
@@ -75,65 +130,31 @@ export default function App() {
       return
     }
 
-    const video = await ffmpeg.writeFile("video.mp4", videoFile)
-    const audio = await ffmpeg.writeFile("audio.mp4", audioFile)
-    const transcript = await ffmpeg.writeFile("transcript.vtt", transcriptFile)
-
-    if (!video || !audio || !transcript) {
-      setError("Failed to download files. Try again or kindly contact the developer. Error#1")
-      setClicked(false)
-      return
+    await ffmpeg.writeFile("video.mp4", videoFile)
+    if (audioFile) {
+      await ffmpeg.writeFile("audio.mp4", audioFile)
+    }
+    if (transcriptFile) {
+      await ffmpeg.writeFile("transcript.vtt", transcriptFile)
     }
 
     let code: number
     try {
       if (videoUrlSecondary) {
         await ffmpeg.writeFile("videoSecondary.mp4", videoSecondaryFile)
-        // ffmpeg -i video.mp4 -i videoSecondary.mp4 -i audio.mp4 -i transcript.vtt -map 0 -map 1 -map 2 -map 3 -c copy -c:s mov_text -disposition:0 default -disposition:1 0 output.mp4
-        code = await ffmpeg.exec([
-          "-i",
-          "video.mp4",
-          "-i",
-          "videoSecondary.mp4",
-          "-i",
-          "audio.mp4",
-          "-i",
-          "transcript.vtt",
-          "-map",
-          "0",
-          "-map",
-          "1",
-          "-map",
-          "2",
-          "-map",
-          "3",
-          "-c",
-          "copy",
-          "-c:s",
-          "mov_text",
-          "-disposition:0",
-          "default",
-          "-disposition:1",
-          "0",
-          "output.mp4",
-        ])
+        const args = buildMergeArgs({
+          hasSecondaryVideo: true,
+          hasAudio: Boolean(audioFile),
+          hasTranscript: Boolean(transcriptFile),
+        })
+        code = await ffmpeg.exec(args)
       } else {
-        // ffmpeg -i video.mp4 -i audio.mp4 -i transcript.vtt -c copy -c:s mov_text -disposition:s:0 default output.mp4
-        code = await ffmpeg.exec([
-          "-i",
-          "video.mp4",
-          "-i",
-          "audio.mp4",
-          "-i",
-          "transcript.vtt",
-          "-c",
-          "copy",
-          "-c:s",
-          "mov_text",
-          "-disposition:s:0",
-          "default",
-          "output.mp4",
-        ])
+        const args = buildMergeArgs({
+          hasSecondaryVideo: false,
+          hasAudio: Boolean(audioFile),
+          hasTranscript: Boolean(transcriptFile),
+        })
+        code = await ffmpeg.exec(args)
       }
     } catch (e) {
       setError("Failed to merge files. Try again or kindly contact the developer. Error#2")
@@ -164,22 +185,34 @@ export default function App() {
 
   // Download only one stream (video + audio + transcript)
   async function downloadStream(videoUrlToDownload: string, streamId: number) {
-    if (!audioUrl || !videoUrlToDownload || !transcriptUrl) {
+    if (!videoUrlToDownload) {
       return
     }
 
     setClicked(true)
     let videoFile: Uint8Array
-    let audioFile: Uint8Array
-    let transcriptFile: Uint8Array
+    let audioFile: Uint8Array | null = null
+    let transcriptFile: Uint8Array | null = null
     try {
       // Fetching files. ffmpeg doesn't provide progress for fetchFile so we do it manually
       MainStore.setState({ mergeProgress: 0, mergeOperation: "Downloading" })
       videoFile = await fetchFile(videoUrlToDownload)
       MainStore.setState({ mergeProgress: 25 })
-      audioFile = await fetchFile(audioUrl)
+      if (audioUrl) {
+        try {
+          audioFile = await fetchFile(audioUrl)
+        } catch {
+          audioFile = null
+        }
+      }
       MainStore.setState({ mergeProgress: 50 })
-      transcriptFile = await fetchFile(transcriptUrl)
+      if (transcriptUrl) {
+        try {
+          transcriptFile = await fetchFile(transcriptUrl)
+        } catch {
+          transcriptFile = null
+        }
+      }
       MainStore.setState({ mergeProgress: 100 })
     } catch (e) {
       setError("Failed to download files. Try again or kindly contact the developer. Error#4")
@@ -187,34 +220,22 @@ export default function App() {
       return
     }
 
-    const video = await ffmpeg.writeFile("video.mp4", videoFile)
-    const audio = await ffmpeg.writeFile("audio.mp4", audioFile)
-    const transcript = await ffmpeg.writeFile("transcript.vtt", transcriptFile)
-
-    if (!video || !audio || !transcript) {
-      setError("Failed to download files. Try again or kindly contact the developer. Error#5")
-      setClicked(false)
-      return
+    await ffmpeg.writeFile("video.mp4", videoFile)
+    if (audioFile) {
+      await ffmpeg.writeFile("audio.mp4", audioFile)
+    }
+    if (transcriptFile) {
+      await ffmpeg.writeFile("transcript.vtt", transcriptFile)
     }
 
     let code: number
     try {
-      // ffmpeg -i video.mp4 -i audio.mp4 -i transcript.vtt -c copy -c:s mov_text -disposition:s:0 default output.mp4
-      code = await ffmpeg.exec([
-        "-i",
-        "video.mp4",
-        "-i",
-        "audio.mp4",
-        "-i",
-        "transcript.vtt",
-        "-c",
-        "copy",
-        "-c:s",
-        "mov_text",
-        "-disposition:s:0",
-        "default",
-        "output.mp4",
-      ])
+      const args = buildMergeArgs({
+        hasSecondaryVideo: false,
+        hasAudio: Boolean(audioFile),
+        hasTranscript: Boolean(transcriptFile),
+      })
+      code = await ffmpeg.exec(args)
     } catch (e) {
       setError("Failed to merge files. Try again or kindly contact the developer. Error#6")
       setClicked(false)
@@ -267,6 +288,7 @@ export default function App() {
         setNameOfFile(title)
         const { url, audioUrl } = UrlStore.getState()
         if (tab.url === url && audioUrl) {
+          UrlStore.setState({ title })
           return
         }
         UrlStore.setState({
@@ -277,7 +299,7 @@ export default function App() {
           title,
           url: tab.url,
         })
-        reloadAndGetURLs()
+        await reloadAndGetURLs()
       } else {
         console.log("Not on the right page.")
       }
@@ -310,13 +332,13 @@ export default function App() {
       <h1 className="text-2xl font-bold">Echo360 Downloader</h1>
       <h2 className="text-lg break-all">{nameOfFile}</h2>
       {error && <h2 className="text-red-500">{error}</h2>}
-      {!videoUrl || !audioUrl || !transcriptUrl ? (
+      {loading ? (
         <div className="absolute w-full h-full bg-[#242424e8] text-lg left-0 top-0 flex flex-col items-center justify-center">
           <h1 className="text-xl text-white">Loading...</h1>
         </div>
       ) : (
         <div className="flex flex-col w-full gap-4">
-          {videoUrlSecondary && (
+          {videoUrlSecondary && videoUrl && (
             <>
               <button
                 className="border-2 py-2 px-4 rounded-lg hover:bg-zinc-600 transition text-center disabled:cursor-not-allowed disabled:bg-zinc-600"
